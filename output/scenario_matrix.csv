@@ -1,0 +1,16 @@
+tier,tier_name,duration_days,oil_band_usd_per_bbl,throughput_reduction_mid_pct,insurance_premium_mid_pct,lng_delay_mid_pct,refinery_stress_mid,revenue_impact_band_usd_bn,liquidity_stress,export_disruption_severity
+0,Normal stability,7,$68.00 - $82.00,1.5,3.0,5.0,18.0,$-0.04 to $0.07,Moderate,Low
+0,Normal stability,30,$69.36 - $86.10,1.73,3.45,5.75,20.7,$-0.14 to $0.45,Moderate,Low
+0,Normal stability,90,$71.40 - $91.84,2.02,4.05,6.75,24.3,$-0.22 to $1.94,Moderate,Low
+1,Limited strike exchange,7,$80.00 - $95.00,8.5,25.0,17.5,36.5,$0.01 to $0.12,Low,Low
+1,Limited strike exchange,30,$81.60 - $99.75,9.78,28.75,20.12,41.98,$0.06 to $0.65,Low,Moderate
+1,Limited strike exchange,90,$84.00 - $106.40,11.47,33.75,23.62,49.27,$0.26 to $2.40,Low,Moderate
+2,Sustained cross-border attacks,7,$95.00 - $115.00,18.5,52.5,35.0,53.5,$0.05 to $0.18,Low,Moderate
+2,Sustained cross-border attacks,30,$96.90 - $120.75,21.27,60.38,40.25,61.52,$0.15 to $0.83,Low,High
+2,Sustained cross-border attacks,90,$99.75 - $128.80,24.98,70.88,47.25,72.22,$0.31 to $2.66,Moderate,High
+3,Regional proxy spillover,7,$110.00 - $140.00,32.5,95.0,56.5,71.0,$0.02 to $0.19,Moderate,High
+3,Regional proxy spillover,30,$112.20 - $147.00,37.38,109.25,64.97,81.65,$-0.06 to $0.72,Moderate,Severe
+3,Regional proxy spillover,90,$115.50 - $156.80,43.88,128.25,76.28,91.85,$-0.78 to $1.73,High,Severe
+4,Hormuz disruption,7,$130.00 - $190.00,55.0,185.0,77.5,86.5,$-0.11 to $0.11,Moderate,Severe
+4,Hormuz disruption,30,$132.60 - $199.50,63.25,212.75,86.38,94.85,$-0.84 to $0.05,Moderate,Severe
+4,Hormuz disruption,90,$136.50 - $212.80,74.25,249.75,92.88,100.0,$-3.98 to $-1.86,High,Severe

@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: sentinel-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    autoDeploy: true
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.2
+      - key: SENTINEL_API_KEYS
+        value: secure-demo-key
+      - key: SENTINEL_ALLOWED_ORIGINS
+        value: "*"
+      - key: SENTINEL_RATE_LIMIT_PER_MINUTE
+        value: "120"
+      - key: SENTINEL_MAX_BODY_BYTES
+        value: "32768"
+      - key: SENTINEL_EXPOSE_DOCS
+        value: "true"
+      - key: SENTINEL_ENABLE_API_NEWS_SOURCES
+        value: "true"
+      - key: SENTINEL_LIVE_QUERY
+        value: Strait of Hormuz OR GCC oil export OR LNG shipping disruption
+      - key: SENTINEL_NEWSAPI_KEY
+        sync: false
+      - key: SENTINEL_GNEWS_KEY
+        sync: false
+      - key: SENTINEL_GUARDIAN_KEY
+        sync: false
+      - key: SENTINEL_NYT_KEY
+        sync: false
+      - key: SENTINEL_MEDIASTACK_KEY
+        sync: false

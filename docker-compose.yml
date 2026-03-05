@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      SENTINEL_API_KEYS: ${SENTINEL_API_KEYS:-}
+      SENTINEL_ALLOWED_ORIGINS: ${SENTINEL_ALLOWED_ORIGINS:-http://localhost:8501}
+      SENTINEL_RATE_LIMIT_PER_MINUTE: ${SENTINEL_RATE_LIMIT_PER_MINUTE:-120}
+      SENTINEL_MAX_BODY_BYTES: ${SENTINEL_MAX_BODY_BYTES:-32768}
+      SENTINEL_EXPOSE_DOCS: ${SENTINEL_EXPOSE_DOCS:-true}
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      SENTINEL_BACKEND_URL: ${SENTINEL_BACKEND_URL:-http://backend:8000}
+      SENTINEL_API_KEY: ${SENTINEL_API_KEY:-}
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.pytest_cache/
+output/*.tmp
+.streamlit/credentials.toml
+.streamlit/secrets.toml
+frontend/.streamlit/secrets.toml
+
+.DS_Store
