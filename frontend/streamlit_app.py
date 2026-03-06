@@ -1,6 +1,7 @@
 import json
 import os
 import tomllib
+import time
 from html import escape
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -452,14 +453,52 @@ def build_headers(api_key: str) -> Dict[str, str]:
     return headers
 
 
+def _request_with_retry(
+    method: str,
+    url: str,
+    *,
+    headers: dict[str, str] | None = None,
+    params: dict[str, Any] | None = None,
+    json_payload: dict[str, Any] | None = None,
+    timeout: float = 20.0,
+    retries: int = 1,
+    backoff_seconds: float = 6.0,
+) -> requests.Response:
+    last_error: Exception | None = None
+    for attempt in range(retries + 1):
+        try:
+            response = requests.request(
+                method=method,
+                url=url,
+                headers=headers,
+                params=params,
+                json=json_payload,
+                timeout=timeout,
+            )
+            response.raise_for_status()
+            return response
+        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as exc:
+            last_error = exc
+            if attempt >= retries:
+                break
+            time.sleep(backoff_seconds)
+        except Exception:
+            raise
+    if last_error is not None:
+        raise last_error
+    raise RuntimeError("Request failed without a captured error")
+
+
 @st.cache_data(ttl=60)
 def load_meta(api_key: str) -> Dict[str, Any]:
-    response = requests.get(
+    response = _request_with_retry(
+        "GET",
         f"{BACKEND_URL}/meta/tiers",
         headers=build_headers(api_key),
-        timeout=6,
+        timeout=25,
+        retries=2,
+        backoff_seconds=8,
     )
-    response.raise_for_status()
     return response.json()
 
 
@@ -475,13 +514,15 @@ def run_scenario(
     headers = build_headers(api_key)
 
     if not enable_live_intel:
-        response = requests.post(
+        response = _request_with_retry(
+            "POST",
             f"{BACKEND_URL}/simulate",
-            json=payload,
+            json_payload=payload,
             headers=headers,
-            timeout=10,
+            timeout=35,
+            retries=1,
+            backoff_seconds=5,
         )
-        response.raise_for_status()
         simulation = response.json()
         return {
             "simulation": simulation,
@@ -498,13 +539,15 @@ def run_scenario(
             "providers": providers,
         },
     }
-    response = requests.post(
+    response = _request_with_retry(
+        "POST",
         f"{BACKEND_URL}/simulate/live",
-        json=live_payload,
+        json_payload=live_payload,
         headers=headers,
-        timeout=20,
+        timeout=60,
+        retries=1,
+        backoff_seconds=6,
     )
-    response.raise_for_status()
     return response.json()
 
 
@@ -535,36 +578,42 @@ def run_advisor_chat(
         },
         "chat_history": chat_history[-10:],
     }
-    response = requests.post(
+    response = _request_with_retry(
+        "POST",
         f"{BACKEND_URL}/advisor/chat",
-        json=chat_payload,
+        json_payload=chat_payload,
         headers=headers,
-        timeout=25,
+        timeout=60,
+        retries=1,
+        backoff_seconds=6,
     )
-    response.raise_for_status()
     return response.json()
 
 
 def add_learning_entry(entry: Dict[str, Any], api_key: str) -> Dict[str, Any]:
-    response = requests.post(
+    response = _request_with_retry(
+        "POST",
         f"{BACKEND_URL}/learning/entries",
-        json=entry,
+        json_payload=entry,
         headers=build_headers(api_key),
-        timeout=10,
+        timeout=25,
+        retries=1,
+        backoff_seconds=4,
     )
-    response.raise_for_status()
     return response.json()
 
 
 @st.cache_data(ttl=45)
 def load_learning_entries(api_key: str, limit: int = 120) -> list[Dict[str, Any]]:
-    response = requests.get(
+    response = _request_with_retry(
+        "GET",
         f"{BACKEND_URL}/learning/entries",
         params={"limit": limit},
         headers=build_headers(api_key),
-        timeout=10,
+        timeout=25,
+        retries=1,
+        backoff_seconds=4,
     )
-    response.raise_for_status()
     data = response.json()
     return data if isinstance(data, list) else []
 
@@ -1061,9 +1110,14 @@ with st.sidebar:
 try:
     meta = load_meta(api_key)
 except Exception as exc:
-    st.error(
-        "Backend is unavailable or unauthorized. Ensure FastAPI is running and set API key if required."
-    )
+    if isinstance(exc, (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError)):
+        st.error(
+            "Backend is waking up on free hosting. Wait 30-90 seconds, then click Rerun."
+        )
+    else:
+        st.error(
+            "Backend is unavailable or unauthorized. Ensure FastAPI is running and set API key if required."
+        )
     st.caption(str(exc))
     st.stop()
 
